@@ -12,27 +12,33 @@ going to be fine :)*/
 var fs=require("fs");
 var inp=fs.readFileSync(0).toString();/*read stdin*/
 /*main regex for extracting function declarations from source text.*/
-var reg=(/^(\/\*(.*?)\*\/)?\n([\w_\*]+)(\n| )+([\w_]+)[\s\t]*(\(.*?\))(\/\*(.*?)\*\/)?([\s\n]*?{)/gms);
+var reg=(/^(\/\*(?<!\*\/)(.*?)\*\/)?\n([\w_\*]+)(\n| )+([\w_]+)[\s\t\n]*(\(.*?\))(\/\*(.*?)\*\/)?([\s\n]*?{((\/\*(.*?)\*\/)?))/gms);
 var m;/*variable for storing regex match.*/
 var iv=process.argv[2]=="v";/*is verbose.*/
 var r="";/*resulting string.*/
 var fm=1;/*is first match.*/
 while(m=reg.exec(inp)){/*iterate over function declaration matches.*/
-/*pre-comment,return type,function name,parameter list,post-comment.*/
-var{2:prcm,3:ret,5:nam,6:par,8:pocm}=m;
+/*pre-comment,return type,function name,parameter list,
+post-comment,(nam()<com.>\n{)
+post-post comment(nam(){<com.>\n).*/
+var{2:prcm,3:ret,5:nam,6:par,8:pocm,12:ppcm}=m;
 if(prcm){
 var liocs=prcm.lastIndexOf("/*");/*last index of comment start.*/
 if(liocs!=-1){
 prcm=prcm.slice(liocs+2);
 }
 }
+/*start building up a resulting string.
+don't forget about verbose flag.*/
 if(!fm)r+="\n";
 if(iv)r+=`${ret}\n`;
-var prcms=prcm?`${prcm}${pocm?";":""}`:""
-var pocms=pocms?pocms:"";
+/*build strings for function description comments.*/
+var prcms=prcm?`${prcm}${pocm||ppcm?";":""}`:""
+var pocms=pocm?`${pocm}${ppcm?";":""}`:"";
+var ppcms=ppcm?ppcm:"";
 r+=nam;
 if(iv)r+=par;
-r+=`${prcms||pocms?": ":""}${prcms}${pocms}\n`;
+r+=`${prcms||pocms||ppcms?": ":""}${prcms}${pocms}${ppcms}\n`;
 fm=0;/*it's not a first match anymore.*/
 }
 process.stdout.write(r);/*write result to stdout.*/
