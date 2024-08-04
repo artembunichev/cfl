@@ -22,23 +22,28 @@ while(m=reg.exec(inp)){/*iterate over function declaration matches.*/
 post-comment,(nam()<com.>\n{)
 post-post comment(nam(){<com.>\n).*/
 var{2:prcm,3:ret,5:nam,6:par,8:pocm,12:ppcm}=m;
+var li;/*match line index(starts from 0,but we'll print it starting from 1).*/
 if(prcm){
 var liocs=prcm.lastIndexOf("/*");/*last index of comment start.*/
+li=inp.slice(0,m.index+liocs).split("\n").length+1;
 if(liocs!=-1){
 prcm=prcm.slice(liocs+2);
 }
 }
+/*TODO:IT DOESN'T ENTIRELY WORK!*/
+li=inp.slice(0,m.index).split("\n").length;
 /*start building up a resulting string.
 don't forget about verbose flag.*/
 if(!fm)r+="\n";
-if(iv)r+=`${ret}\n`;
+r+=`${li+1}: `
+if(iv)r+=`${ret} `;
 /*build strings for function description comments.*/
 var prcms=prcm?`${prcm}${pocm||ppcm?";":""}`:""
 var pocms=pocm?`${pocm}${ppcm?";":""}`:"";
 var ppcms=ppcm?ppcm:"";
 r+=nam;
 if(iv)r+=par;
-r+=`${prcms||pocms||ppcms?": ":""}${prcms}${pocms}${ppcms}\n`;
+r+=`${prcms||pocms||ppcms?"-":""}${prcms}${pocms}${ppcms}\n`;
 fm=0;/*it's not a first match anymore.*/
 }
 process.stdout.write(r);/*write result to stdout.*/
