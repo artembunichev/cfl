@@ -8,11 +8,11 @@ if you desire to get more details(function return type and parameter list)
 this script doesn't use a complicated parse algorithm, it merely uses
 regular expressions(which actually is right a complicated stuff!) so it
 won't work in tricky cases. but you just don't use them and everything is
-going to be fine :)*/
+going to be fine(it anyway is) :)*/
 var fs=require("fs");
 var inp=fs.readFileSync(0).toString();/*read stdin*/
 /*main regex for extracting function declarations from source text.*/
-var reg=(/^(\/\*(?<!\*\/)(.*?)\*\/)?\n([\w_\*]+)(\n| )+([\w_]+)[\s\t\n]*(\(.*?\))(\/\*(.*?)\*\/)?([\s\n]*?{((\/\*(.*?)\*\/)?))/gms);
+var reg=/\n([\w_\*]+)(\n| )+([\w_]+)[\s\t\n]*(\([^\)]*?\))(\/\*(.*?)\*\/)?((\s?|\n){((\/\*(.*?)\*\/)?))/gms;
 var m;/*variable for storing regex match.*/
 var iv=process.argv[2]=="v";/*is verbose.*/
 var r="";/*resulting string.*/
@@ -21,19 +21,17 @@ while(m=reg.exec(inp)){/*iterate over function declaration matches.*/
 /*pre-comment,return type,function name,parameter list,
 post-comment,(nam()<com.>\n{)
 post-post comment(nam(){<com.>\n).*/
-var{2:prcm,3:ret,5:nam,6:par,8:pocm,12:ppcm}=m;
-var li;/*match line index(starts from 0,but we'll print it starting from 1).*/
-if(prcm){
-var liocs=prcm.lastIndexOf("/*");/*last index of comment start.*/
-li=inp.slice(0,m.index+liocs).split("\n").length+1;
-if(liocs!=-1){
-prcm=prcm.slice(liocs+2);
+var{1:ret,3:nam,4:par,6:pocm,11:ppcm}=m;
+/*look for pre-comment separately 'cause it's much easier
+than trying to build up a proper regex for this purpose.*/
+var prcm=undefined;
+if(inp.slice(0,m.index).endsWith("*/")){
+prcm=inp.slice(inp.slice(0,m.index).lastIndexOf("/*")+2,m.index-2)
 }
-}
-/*TODO:IT DOESN'T ENTIRELY WORK!*/
-li=inp.slice(0,m.index).split("\n").length;
+/*match line index(starts from 0,but we'll print it starting from 1).*/
+var li=inp.slice(0,m.index).split("\n").length;
 /*start building up a resulting string.
-don't forget about verbose flag.*/
+and do not forget about verbose flag.*/
 if(!fm)r+="\n";
 r+=`${li+1}: `
 if(iv)r+=`${ret} `;
