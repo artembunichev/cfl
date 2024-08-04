@@ -1,0 +1,39 @@
+#!/usr/local/bin/node
+/*cfl-simple script for listing functions in C source code.
+pipe the source code into this script and it'll list function names
+with their descriptions(if they're provided; only C89 comments are
+suppoerted).
+if you desire to get more details(function return type and parameter list)
+-specify a "v"(verbose) argument so entire command will be: <src text>|cfl v.
+this script doesn't use a complicated parse algorithm, it merely uses
+regular expressions(which actually is right a complicated stuff!) so it
+won't work in tricky cases. but you just don't use them and everything is
+going to be fine :)*/
+var fs=require("fs");
+var inp=fs.readFileSync(0).toString();/*read stdin*/
+/*main regex for extracting function declarations from source text.*/
+var reg=(/^(\/\*(.*?)\*\/)?\n([\w_\*]+)(\n| )+([\w_]+)[\s\t]*(\(.*?\))(\/\*(.*?)\*\/)?([\s\n]*?{)/gms);
+var m;/*variable for storing regex match.*/
+var iv=process.argv[2]=="v";/*is verbose.*/
+var r="";/*resulting string.*/
+var fm=1;/*is first match.*/
+while(m=reg.exec(inp)){/*iterate over function declaration matches.*/
+/*pre-comment,return type,function name,parameter list,post-comment.*/
+var{2:prcm,3:ret,5:nam,6:par,8:pocm}=m;
+if(prcm){
+var liocs=prcm.lastIndexOf("/*");/*last index of comment start.*/
+if(liocs!=-1){
+prcm=prcm.slice(liocs+2);
+}
+}
+if(!fm)r+="\n";
+if(iv)r+=`${ret}\n`;
+var prcms=prcm?`${prcm}${pocm?";":""}`:""
+var pocms=pocms?pocms:"";
+r+=nam;
+if(iv)r+=par;
+r+=`${prcms||pocms?": ":""}${prcms}${pocms}\n`;
+fm=0;/*it's not a first match anymore.*/
+}
+process.stdout.write(r);/*write result to stdout.*/
+return 0;/*exit program.*/
